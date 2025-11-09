@@ -23,7 +23,8 @@
     "axios": "^1.13.2",
     "discord.js": "^14.24.2",
     "dotenv": "^17.2.3",
-    "ffmpeg-static": "^5.2.0"
+    "ffmpeg-static": "^5.2.0",
+    "opusscript": "^0.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
