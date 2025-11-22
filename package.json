@@ -15,6 +15,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js",
+    "deploy": "node deploy-commands.js",
     "test": "ping"
   },
   "dependencies": {
