@@ -1,42 +1,66 @@
-const clips = [
-  { id: 1, audioFile: "gila.mp3", volume: 0.6 },
-  { id: 2, audioFile: "mustard.mp3", volume: 0.7 },
-  { id: 3, audioFile: "money_machine.mp3", volume: 0.7 },
-  { id: 4, audioFile: "bg3_theme.mp3", volume: 0.7 },
-  { id: 5, audioFile: "blink.mp3", volume: 0.8 },
-  { id: 6, audioFile: "cage_norest.mp3", volume: 0.8 },
-  { id: 7, audioFile: "happydays.mp3", volume: 0.8 },
-  { id: 8, audioFile: "no_broke_boys.mp3", volume: 0.8 },
-  { id: 9, audioFile: "yungbae.mp3", volume: 0.6 },
-  { id: 10, audioFile: "hullabaloo.mp3", volume: 0.8 },
-];
+const fs = require('fs').promises;
+const path = require('path');
 
-function getAllClips() {
-  return clips;
+const DATA_FILE = path.join(__dirname, "..", "data", 'clips.json');
+
+let clips = null;
+
+async function load() {
+    if (clips !== null) return clips;
+    
+    try {
+        const data = await fs.readFile(DATA_FILE, 'utf8');
+        clips = JSON.parse(data);
+    } catch (error) {
+        if (error.code === 'ENOENT') {
+            clips = {};
+            await save();
+        } else {
+            throw error;
+        }
+    }
+    return clips;
 }
 
-function insertClip(audioFile, volume = 0.8) {
-  const newId = clips.length > 0 ? Math.max(...clips.map((c) => c.id)) + 1 : 1;
-  const newClip = { id: newId, audioFile, volume };
-  clips.push(newClip);
-  return newClip;
-}
-
-function getClip(id) {
-  return clips.find((c) => c.id === id);
-}
-
-function setClipVolume(id, volume) {
-  const clip = getClip(id);
-  if (clip) {
-    clip.volume = volume;
-    return 1;
-  }
+// Save data to JSON file
+async function save() {
+    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+    await fs.writeFile(DATA_FILE, JSON.stringify(clips, null, 2));
 }
 
 module.exports = {
-  getAllClips,
-  insertClip,
-  setClipVolume,
-  getClip,
+    getAllClips: async function() {
+        await load();
+        return Object.entries(clips).map(([id, data]) => ({
+            id: parseInt(id),
+            ...data
+        }));
+    },
+
+    getClip: async function(id) {
+        await load();
+        const data = clips[id];
+        return data ? { id: parseInt(id), ...data } : null;
+    },
+
+    insertClip: async function(audioFile, volume = 0.8) {
+        await load();
+        const ids = Object.keys(clips).map(id => parseInt(id));
+        const newId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+        
+        const newClip = { audioFile, volume };
+        clips[newId] = newClip;
+        await save();
+        return { id: newId, ...newClip };
+    },
+
+    setClipVolume: async function(id, volume) {
+        await load();
+        if (clips[id]) {
+            clips[id].volume = volume;
+            await save();
+            return 1;
+        }
+        return 0;
+    }
 };
