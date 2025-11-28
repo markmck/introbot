@@ -14,12 +14,17 @@ module.exports = {
   async execute(oldState, newState) {
     const member = newState.member;
     const now = Date.now();
-    const enterAudio = clipsList.getClip(
-      entranceList.getById(member.id)?.audioFileId ?? -1
-    );
-    const leaveAudio = clipsList.getClip(
-      leaveList.getById(member.id)?.audioFileId ?? -1
-    );
+    
+    // Get user's audio settings (all async now)
+    const entranceUser = await entranceList.getById(member.id);
+    const leaveUser = await leaveList.getById(member.id);
+    
+    const enterAudio = entranceUser 
+      ? await clipsList.getClip(entranceUser.audioFileId)
+      : null;
+    const leaveAudio = leaveUser
+      ? await clipsList.getClip(leaveUser.audioFileId)
+      : null;
 
     // User joined a voice channel
     if (!oldState.channel && newState.channel && enterAudio) {

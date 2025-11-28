@@ -1,51 +1,73 @@
-const entrance = [
-    { userId: "355177890045755395", audioFileId: 1, username: "LankyBastrd" },
-    { userId: "464988700435021825", audioFileId: 2, username: "HodorsWit" },
-    { userId: "110573324056162304", audioFileId: 3, username: "Mantooth" },
-    { userId: "112363105090060288", audioFileId: 4, username: "prot" },
-    { userId: "354848827850752000", audioFileId: 5, username: "phaef" },
-    { userId: "168537084695543808", audioFileId: 6, username: "peli" },
-    { userId: "268553395168608256", audioFileId: 7, username: "otherguy" },
-    { userId: "233043650383183902", audioFileId: 8, username: "clutchy" },
-    { userId: "689278881982971956", audioFileId: 9, username: "colbycheese" },
-    { userId: "326184998334103573", audioFileId: 10, username: "eaper" }
-];
+const fs = require("fs").promises;
+const path = require("path");
 
-function getAll() {
-    return entrance;
+const DATA_FILE = path.join(__dirname, "..", "data", "entrance.json");
+
+let entrance = null;
+
+async function load() {
+  if (entrance !== null) return entrance;
+
+  try {
+    const data = await fs.readFile(DATA_FILE, "utf8");
+    entrance = JSON.parse(data);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      entrance = {};
+      await save();
+    } else {
+      throw error;
+    }
+  }
+  return entrance;
 }
 
-function getById(userId) {
-    return entrance.find(entry => entry.userId === userId);
+async function save() {
+  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+  await fs.writeFile(DATA_FILE, JSON.stringify(entrance, null, 2));
 }
-
-const insert = (userId, audioFileId, username) => {
-    const newEntry = { userId, audioFileId, username };
-    entrance.push(newEntry);
-    return newEntry;
-};
-
-const update = (userId, audioFileId) => {
-    const index = entrance.findIndex(entry => entry.userId === userId);
-    if (index !== -1) {
-        entrance[index] = { ...entrance[index], audioFileId };
-        return entrance[index];
-    }
-    return null;
-};
-
-const deleteById = (userId) => {
-    const index = entrance.findIndex(entry => entry.userId === userId);
-    if (index !== -1) {
-        return entrance.splice(index, 1)[0];
-    }
-    return null;
-};
 
 module.exports = {
-    getAll,
-    getById,
-    insert,
-    update,
-    deleteById
+  getAll: async function () {
+    await load();
+    return Object.entries(entrance).map(([userId, data]) => ({
+      userId,
+      ...data,
+    }));
+  },
+
+  getById: async function (userId) {
+    await load();
+    const data = entrance[userId.toString()];
+    return data ? { userId, ...data } : null;
+  },
+
+  insert: async function (userId, audioFileId, username) {
+    await load();
+    const newEntry = { audioFileId, username, volume: 1.0 };
+    entrance[userId] = newEntry;
+    await save();
+    return { userId, ...newEntry };
+  },
+
+  update: async function (userId, audioFileId) {
+    await load();
+    if (entrance[userId]) {
+      entrance[userId].audioFileId = audioFileId;
+      await save();
+      return { userId, ...entrance[userId] };
+    }
+    return null;
+  },
+
+  deleteById: async function (userId) {
+    await load();
+    if (entrance[userId]) {
+      const deleted = { userId, ...entrance[userId] };
+      delete entrance[userId];
+      await save();
+      return deleted;
+    }
+    return null;
+  },
 };
