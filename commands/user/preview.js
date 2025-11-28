@@ -31,7 +31,7 @@ module.exports = {
       return;
     }
 
-    const clip = clipList.getClip(clipId);
+    const clip = await clipList.getClip(clipId.toString());
 
     // Check if clip exists in the list
     if (!clip) {
