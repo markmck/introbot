@@ -9,7 +9,6 @@ module.exports = {
 
   async execute(interaction) {
     let clipList = await clips.getAllClips();
-    console.log(clipList);
     if (!clipList || clipList.length === 0) {
       await interaction.reply({
         content: "📂 No audio clips available yet.",
