@@ -21,17 +21,17 @@ module.exports = {
 
     // Create embed
     const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
+      .setColor(0x00ff99)
       .setTitle(`🎵 ${interaction.user.username}'s Clips`)
       .addFields(
         {
           name: '🎤 Intro (Join)',
-          value: introClip ? `**${introClip.audioFile}** (ID: ${introClip.id})` : '_Not set_',
+          value: introClip ? `**${clips.getClipTitle(introClip)}** (ID: ${introClip.audioFile})` : '_Not set_',
           inline: false
         },
         {
           name: '👋 Outro (Leave)',
-          value: outroClip ? `**${outroClip.audioFile}** (ID: ${outroClip.id})` : '_Not set_',
+          value: outroClip ? `**${clips.getClipTitle(outroClip)}** (ID: ${outroClip.audioFile})` : '_Not set_',
           inline: false
         }
       )

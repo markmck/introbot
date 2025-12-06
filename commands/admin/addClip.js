@@ -1,5 +1,11 @@
 // commands/admin/addclip.js
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 const clipsList = require("../../models/clips");
 const path = require("path");
 const fs = require("fs").promises;
@@ -24,6 +30,13 @@ module.exports = {
         .setMaxValue(1.0)
         .setRequired(false)
     )
+    .addStringOption((option) =>
+      option
+        .setName("description")
+        .setDescription("Description of the audio clip")
+        .setRequired(false)
+    )
+
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
@@ -31,9 +44,10 @@ module.exports = {
 
     const attachment = interaction.options.getAttachment("file");
     const volume = interaction.options.getNumber("volume") || 0.8;
+    const description = interaction.options.getString("description") || "";
 
     // Validate file type
-    const validExtensions = [".mp3", ".wav", ".ogg", ".m4a"];
+    const validExtensions = [".mp3", ".wav"];
     const fileExt = path.extname(attachment.name).toLowerCase();
 
     if (!validExtensions.includes(fileExt)) {
@@ -56,23 +70,17 @@ module.exports = {
       await downloadFile(attachment.url, filePath);
 
       // Add to clips database
-      const newClip = await clipsList.insertClip(fileName, volume);
+      const newClip = await clipsList.insertClip(fileName, volume, description);
 
       await interaction.editReply({
-        content: `✅ Clip added successfully!\n**ID:** ${newClip.id}\n**File:** ${newClip.audioFile}\n**Volume:** ${newClip.volume}`,
+        content: `✅ Clip added successfully!\n**ID:** ${newClip.id}\n**File:** ${newClip.audioFile}\n**Volume:** ${newClip.volume}\n**Description:** ${newClip.description}`,
       });
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`${newClip.audioFile}`)
-          .setLabel("Listen")
-          .setEmoji("🔊")
-          .setStyle(ButtonStyle.Primary)
-      );
-
       await interaction.channel.send({
-        content: `🎵 **${newClip.audioFile}** was added!`,
-        files: [{ attachment: filePath, name: newClip.audioFile }]
+        content: `🎵 **${
+          newClip.description ?? newClip.audioFile
+        }** was added!`,
+        files: [{ attachment: filePath, name: newClip.audioFile }],
       });
     } catch (error) {
       console.error("Error adding clip:", error);

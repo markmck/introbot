@@ -39,7 +39,7 @@ module.exports = {
     }
 
     await interaction.reply({
-      content: `✅ Your outro clip has been set to: **${clip.audioFile}**`,
+      content: `✅ Your outro clip has been set to: **${clips.getClipTitle(clip)}**`,
       ephemeral: true,
     });
   },

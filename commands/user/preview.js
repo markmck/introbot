@@ -36,7 +36,7 @@ module.exports = {
     // Check if clip exists in the list
     if (!clip) {
       await interaction.reply({
-        content: `❌ Clip "${clip.audioFile}" not found. Use /listclips to see available clips.`,
+        content: `❌ Clip "${clipList.getClipTitle(clip)}" not found. Use /listclips to see available clips.`,
         ephemeral: true
       });
       return;
@@ -52,7 +52,7 @@ module.exports = {
       await playAudio(voiceChannel, audioPath, 0.5);
       
       await interaction.editReply({
-        content: `🔊 Playing preview: **${clip.audioFile}**`
+        content: `🔊 Playing preview: **${clipList.getClipTitle(clip)}**`
       });
       
     } catch (error) {

@@ -41,7 +41,7 @@ module.exports = {
     }
 
     await interaction.reply({
-      content: `✅ Your intro clip has been set to: **${clip.audioFile}**`,
+      content: `✅ Your intro clip has been set to: **${clips.getClipTitle(clip)}**`,
       ephemeral: true,
     });
   },

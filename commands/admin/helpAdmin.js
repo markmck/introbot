@@ -36,7 +36,7 @@ module.exports = {
       .join('\n');
 
     const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
+      .setColor(0x00ff99)
       .setTitle('📋 Available Commands')
       .setDescription(commandList)
       .setFooter({ text: 'Use /command to execute' })
