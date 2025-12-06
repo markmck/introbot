@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events } = require("discord.js");
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -6,7 +6,7 @@ module.exports = {
     // Handle autocomplete interactions
     if (interaction.isAutocomplete()) {
       const command = interaction.client.commands.get(interaction.commandName);
-      
+
       if (!command || !command.autocomplete) {
         console.error(`No autocomplete handler for ${interaction.commandName}`);
         return;
@@ -15,7 +15,10 @@ module.exports = {
       try {
         await command.autocomplete(interaction);
       } catch (error) {
-        console.error(`Error in autocomplete for ${interaction.commandName}:`, error);
+        console.error(
+          `Error in autocomplete for ${interaction.commandName}:`,
+          error
+        );
       }
       return;
     }
@@ -26,7 +29,9 @@ module.exports = {
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (!command) {
-      console.error(`No command matching ${interaction.commandName} was found.`);
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
       return;
     }
 
@@ -35,13 +40,19 @@ module.exports = {
     } catch (error) {
       console.error(`Error executing ${interaction.commandName}:`);
       console.error(error);
-      
-      const errorMessage = 'There was an error while executing this command!';
-      
+
+      const errorMessage = "There was an error while executing this command!";
+
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content: errorMessage, ephemeral: true });
+        await interaction.followUp({
+          content: errorMessage,
+          flags: MessageFlags.Ephemeral,
+        });
       } else {
-        await interaction.reply({ content: errorMessage, ephemeral: true });
+        await interaction.reply({
+          content: errorMessage,
+          flags: MessageFlags.Ephemeral,
+        });
       }
     }
   },
