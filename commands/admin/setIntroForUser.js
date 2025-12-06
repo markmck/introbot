@@ -9,30 +9,29 @@ const { handleClipAutocomplete } = require("../../utils/autoComplete.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("setvolume")
-    .setDescription("Update volume of a clip.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setName("setintroforuser")
+    .setDescription("Set the intro audio clip for a user.")
+    .addUserOption((option) =>
+      option
+        .setName("user")
+        .setDescription("The user to set the intro for")
+        .setRequired(true)
+    )
     .addStringOption((option) =>
       option
         .setName("clip")
-        .setDescription("The clip to update")
+        .setDescription("The clip to set as your intro")
         .setRequired(true)
         .setAutocomplete(true)
     )
-    .addNumberOption((option) =>
-      option
-        .setName("volume")
-        .setDescription("Volume level (0.0 to 1.0)")
-        .setRequired(true)
-        .setMinValue(0.0)
-        .setMaxValue(1.0)
-    ),
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
     const clipId = parseInt(interaction.options.getString("clip"));
-    const volume = interaction.options.getNumber("volume");
+    const user = interaction.options.getUser("user");
+    const userId = user.id;
 
-    console.log(`Setting clip ${clipId} volume to ${volume}`);
+    console.log(`User ${userId} is setting intro clip to ID: ${clipId}`);
 
     // Check if clip exists
     const clip = await clips.getClip(clipId);
@@ -44,14 +43,24 @@ module.exports = {
       return;
     }
 
-    await clips.setClipVolume(clipId, volume);
+    // Check if user already has an intro
+    const existingIntro = await entrance.getById(userId);
+
+    if (existingIntro) {
+      await entrance.update(userId, clipId);
+    } else {
+      await entrance.insert(userId, clipId, user.username);
+    }
 
     await interaction.reply({
-      content: `✅ Volume for **${clip.audioFile}** set to ${volume}`,
+      content: `The Intro clip for the <@${userId}> is set to **${clips.getClipTitle(
+        clip
+      )}**`,
       flags: MessageFlags.Ephemeral,
     });
   },
 
+  // Autocomplete handler for clip names
   async autocomplete(interaction) {
     await handleClipAutocomplete(interaction);
   },

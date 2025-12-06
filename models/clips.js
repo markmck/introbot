@@ -1,66 +1,102 @@
-const fs = require('fs').promises;
-const path = require('path');
+const fs = require("fs").promises;
+const path = require("path");
 
-const DATA_FILE = path.join(__dirname, "..", "data", 'clips.json');
+const DATA_FILE = path.join(__dirname, "..", "data", "clips.json");
 
 let clips = null;
 
 async function load() {
-    if (clips !== null) return clips;
-    
-    try {
-        const data = await fs.readFile(DATA_FILE, 'utf8');
-        clips = JSON.parse(data);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            clips = {};
-            await save();
-        } else {
-            throw error;
-        }
+  if (clips !== null) return clips;
+
+  try {
+    const data = await fs.readFile(DATA_FILE, "utf8");
+    clips = JSON.parse(data);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      clips = {};
+      await save();
+    } else {
+      throw error;
     }
-    return clips;
+  }
+  return clips;
 }
 
 // Save data to JSON file
 async function save() {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    await fs.writeFile(DATA_FILE, JSON.stringify(clips, null, 2));
+  await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+  await fs.writeFile(DATA_FILE, JSON.stringify(clips, null, 2));
 }
 
 module.exports = {
-    getAllClips: async function() {
-        await load();
-        return Object.entries(clips).map(([id, data]) => ({
-            id: parseInt(id),
-            ...data
-        }));
-    },
+  getAllClips: async function () {
+    await load();
+    return Object.entries(clips).map(([id, data]) => ({
+      id: parseInt(id),
+      ...data,
+    }));
+  },
 
-    getClip: async function(id) {
-        await load();
-        const data = clips[id];
-        return data ? { id: parseInt(id), ...data } : null;
-    },
+  getClip: async function (id) {
+    await load();
+    const data = clips[id];
+    return data ? { id: parseInt(id), ...data } : null;
+  },
 
-    insertClip: async function(audioFile, volume = 0.8) {
-        await load();
-        const ids = Object.keys(clips).map(id => parseInt(id));
-        const newId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
-        
-        const newClip = { audioFile, volume };
-        clips[newId] = newClip;
-        await save();
-        return { id: newId, ...newClip };
-    },
+  insertClip: async function (audioFile, volume = 0.8, description = "") {
+    await load();
+    const ids = Object.keys(clips).map((id) => parseInt(id));
+    const newId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
 
-    setClipVolume: async function(id, volume) {
-        await load();
-        if (clips[id]) {
-            clips[id].volume = volume;
-            await save();
-            return 1;
-        }
-        return 0;
+    const newClip = { audioFile, volume, description };
+    clips[newId] = newClip;
+    await save();
+    return { id: newId, ...newClip };
+  },
+
+  setClipVolume: async function (id, volume) {
+    await load();
+    if (clips[id]) {
+      clips[id].volume = volume;
+      await save();
+      return 1;
     }
+    return 0;
+  },
+
+  setClipDescription: async function (id, description) {
+    await load();
+    if (clips[id]) {
+      clips[id].description = description;
+      await save();
+      return 1;
+    }
+    return 0;
+  },
+
+  getClipTitle: function (clip) {
+    return clip.description && clip.description.trim() !== ""
+      ? clip.description
+      : clip.audioFile;
+  },
+
+  removeClip: async function (id) {
+    await load();
+    if (clips[id]) {
+      const deleted = { id: parseInt(id), ...clips[id] };
+
+      // Delete the file
+      const filePath = path.join(__dirname, "..", "audio", clips[id].audioFile);
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.error(`Failed to delete file ${filePath}:`, err.message);
+      }
+
+      delete clips[id];
+      await save();
+      return deleted;
+    }
+    return null;
+  },
 };

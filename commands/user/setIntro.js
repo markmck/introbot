@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const clips = require("../../models/clips.js");
 const entrance = require("../../models/entrance.js");
 const { handleClipAutocomplete } = require("../../utils/autoComplete.js");
@@ -26,14 +26,14 @@ module.exports = {
     if (!clip) {
       await interaction.reply({
         content: "❌ Clip not found. Use `/listclips` to see available clips.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     // Check if user already has an intro
     const existingIntro = await entrance.getById(userId);
-    
+
     if (existingIntro) {
       await entrance.update(userId, clipId);
     } else {
@@ -41,8 +41,10 @@ module.exports = {
     }
 
     await interaction.reply({
-      content: `✅ Your intro clip has been set to: **${clip.audioFile}**`,
-      ephemeral: true,
+      content: `✅ Your intro clip has been set to: **${clips.getClipTitle(
+        clip
+      )}**`,
+      flags: MessageFlags.Ephemeral,
     });
   },
 
