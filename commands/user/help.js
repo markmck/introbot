@@ -40,7 +40,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor(0x00ff99)
-      .setTitle("📋 Available Commands")
+      .setTitle("Available Commands")
       .setDescription(commandList)
       .setFooter({ text: "Use /command to execute" })
       .setTimestamp();
