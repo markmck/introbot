@@ -19,39 +19,37 @@ module.exports = {
   async execute(interaction) {
     const clipId = parseInt(interaction.options.getString("clip"));
 
-    // Check if user is in a voice channel
-    const member = interaction.member;
-    const voiceChannel = member.voice.channel;
+    const clip = await clipList.getClip(clipId.toString());
 
-    if (!voiceChannel) {
+    if (!clip) {
       await interaction.reply({
-        content: "❌ You need to be in a voice channel to preview a clip!",
+        content: `❌ Clip not found. Use /listclips to see available clips.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
-    const clip = await clipList.getClip(clipId.toString());
+    const audioPath = path.join(__dirname, "../../audio", clip.audioFile);
 
-    // Check if clip exists in the list
-    if (!clip) {
+    const member = interaction.member;
+    const voiceChannel = member.voice.channel;
+
+    if (!voiceChannel) {
+      // Send as file attachment instead
       await interaction.reply({
-        content: `❌ Clip "${clipList.getClipTitle(
-          clip
-        )}" not found. Use /listclips to see available clips.`,
+        content: `Preview **${clipList.getClipTitle(clip)}**:`,
+        files: [{ attachment: audioPath, name: clip.audioFile }],
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
     // Defer reply since audio playback might take a moment
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const audioPath = path.join(__dirname, "../../audio", clip.audioFile);
-
       // Play the audio with default volume
-      await playAudio(voiceChannel, audioPath, 0.5);
+      await playAudio(voiceChannel, audioPath, clip.volume);
 
       await interaction.editReply({
         content: `🔊 Playing preview: **${clipList.getClipTitle(clip)}**`,

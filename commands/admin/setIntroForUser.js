@@ -53,7 +53,7 @@ module.exports = {
     }
 
     await interaction.reply({
-      content: `The Intro clip for the <@${userId}> is set to **${clips.getClipTitle(
+      content: `✅ The Intro clip for the <@${userId}> is set to **${clips.getClipTitle(
         clip
       )}**`,
       flags: MessageFlags.Ephemeral,

@@ -1,5 +1,9 @@
 // commands/admin/addclip.js
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags  } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  MessageFlags,
+} = require("discord.js");
 const clipsList = require("../../models/clips");
 const path = require("path");
 const fs = require("fs").promises;
@@ -39,13 +43,25 @@ module.exports = {
     const volume = interaction.options.getNumber("volume") || 0.8;
     const description = interaction.options.getString("description") || "";
 
+    // Validate file size (e.g., 5MB limit)
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+    if (attachment.size > maxSizeBytes) {
+      return interaction.editReply({
+        content: `❌ File too large. Maximum size is 5MB, yours is ${(
+          attachment.size /
+          1024 /
+          1024
+        ).toFixed(2)}MB.`,
+      });
+    }
+
     // Validate file type
     const validExtensions = [".mp3", ".wav"];
     const fileExt = path.extname(attachment.name).toLowerCase();
 
     if (!validExtensions.includes(fileExt)) {
       return interaction.editReply({
-        content: `Invalid file type. Please upload one of: ${validExtensions.join(
+        content: ` ❌ Invalid file type. Please upload one of: ${validExtensions.join(
           ", "
         )}`,
       });
@@ -70,7 +86,7 @@ module.exports = {
       });
 
       await interaction.channel.send({
-        content: `🎵 **${
+        content: ` **${
           newClip.description ?? newClip.audioFile
         }** was added!`,
         files: [{ attachment: filePath, name: newClip.audioFile }],
