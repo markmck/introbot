@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const clips = require("../../models/clips.js");
 const entrance = require("../../models/entrance.js");
 const leave = require("../../models/leave.js");
@@ -16,8 +16,12 @@ module.exports = {
     const userOutro = await leave.getById(userId);
 
     // Get the actual clip details
-    const introClip = userIntro ? await clips.getClip(userIntro.audioFileId) : null;
-    const outroClip = userOutro ? await clips.getClip(userOutro.audioFileId) : null;
+    const introClip = userIntro
+      ? await clips.getClip(userIntro.audioFileId)
+      : null;
+    const outroClip = userOutro
+      ? await clips.getClip(userOutro.audioFileId)
+      : null;
 
     // Create embed
     const embed = new EmbedBuilder()
@@ -25,21 +29,29 @@ module.exports = {
       .setTitle(`🎵 ${interaction.user.username}'s Clips`)
       .addFields(
         {
-          name: '🎤 Intro (Join)',
-          value: introClip ? `**${clips.getClipTitle(introClip)}** (ID: ${introClip.audioFile})` : '_Not set_',
-          inline: false
+          name: "Intro",
+          value: introClip
+            ? `**${clips.getClipTitle(introClip)}** (File: ${
+                introClip.audioFile
+              })`
+            : "_Not set_",
+          inline: false,
         },
         {
-          name: '👋 Outro (Leave)',
-          value: outroClip ? `**${clips.getClipTitle(outroClip)}** (ID: ${outroClip.audioFile})` : '_Not set_',
-          inline: false
+          name: "Outro",
+          value: outroClip
+            ? `**${clips.getClipTitle(outroClip)}** (File: ${
+                outroClip.audioFile
+              })`
+            : "_Not set_",
+          inline: false,
         }
       )
-      .setFooter({ text: 'Use /setintro or /setoutro to change your clips' });
+      .setFooter({ text: "Use /setintro or /setoutro to change your clips" });
 
     await interaction.reply({
       embeds: [embed],
-      ephemeral: true
+      flags: MessageFlags.Ephemeral,
     });
   },
 };

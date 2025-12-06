@@ -1,4 +1,8 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  MessageFlags,
+  EmbedBuilder,
+} = require("discord.js");
 const clips = require("../../models/clips.js");
 
 module.exports = {
@@ -24,7 +28,7 @@ module.exports = {
     if (!clipList || clipList.length === 0) {
       await interaction.reply({
         content: "📂 No audio clips available yet.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }

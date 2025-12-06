@@ -1,11 +1,5 @@
 // commands/admin/addclip.js
-const {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags  } = require("discord.js");
 const clipsList = require("../../models/clips");
 const path = require("path");
 const fs = require("fs").promises;
@@ -36,11 +30,10 @@ module.exports = {
         .setDescription("Description of the audio clip")
         .setRequired(false)
     )
-
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const attachment = interaction.options.getAttachment("file");
     const volume = interaction.options.getNumber("volume") || 0.8;

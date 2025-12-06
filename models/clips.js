@@ -64,9 +64,39 @@ module.exports = {
     return 0;
   },
 
+  setClipDescription: async function (id, description) {
+    await load();
+    if (clips[id]) {
+      clips[id].description = description;
+      await save();
+      return 1;
+    }
+    return 0;
+  },
+
   getClipTitle: function (clip) {
     return clip.description && clip.description.trim() !== ""
       ? clip.description
       : clip.audioFile;
+  },
+
+  removeClip: async function (id) {
+    await load();
+    if (clips[id]) {
+      const deleted = { id: parseInt(id), ...clips[id] };
+
+      // Delete the file
+      const filePath = path.join(__dirname, "..", "audio", clips[id].audioFile);
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        console.error(`Failed to delete file ${filePath}:`, err.message);
+      }
+
+      delete clips[id];
+      await save();
+      return deleted;
+    }
+    return null;
   },
 };

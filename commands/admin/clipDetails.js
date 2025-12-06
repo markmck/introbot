@@ -1,33 +1,24 @@
 const {
   SlashCommandBuilder,
+  EmbedBuilder,
   PermissionFlagsBits,
   MessageFlags,
 } = require("discord.js");
 const clips = require("../../models/clips.js");
-const entrance = require("../../models/entrance.js");
 const { handleClipAutocomplete } = require("../../utils/autoComplete.js");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("setvolume")
-    .setDescription("Update volume of a clip.")
+    .setName("clipdetails")
+    .setDescription("Get the details of a specific clip.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .addStringOption((option) =>
       option
         .setName("clip")
-        .setDescription("The clip to update")
+        .setDescription("The clip to get details for")
         .setRequired(true)
         .setAutocomplete(true)
-    )
-    .addNumberOption((option) =>
-      option
-        .setName("volume")
-        .setDescription("Volume level (0.0 to 1.0)")
-        .setRequired(true)
-        .setMinValue(0.0)
-        .setMaxValue(1.0)
     ),
-
   async execute(interaction) {
     const clipId = parseInt(interaction.options.getString("clip"));
     const volume = interaction.options.getNumber("volume");
@@ -44,12 +35,22 @@ module.exports = {
       return;
     }
 
-    await clips.setClipVolume(clipId, volume);
+    const embed = new EmbedBuilder()
+      .setTitle(`Details for Clip: ${clip.audioFile}`)
+      .addFields(
+        { name: "ID", value: clip.id.toString(), inline: true },
+        { name: "File", value: clip.audioFile, inline: true },
+        { name: "Volume", value: clip.volume.toString(), inline: true },
+        {
+          name: "Description",
+          value: clip.description || "No description",
+          inline: false,
+        }
+      )
+      .setColor(0x00ff99)
+      .setTimestamp();
 
-    await interaction.reply({
-      content: `✅ Volume for **${clip.audioFile}** set to ${volume}`,
-      flags: MessageFlags.Ephemeral,
-    });
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 
   async autocomplete(interaction) {
