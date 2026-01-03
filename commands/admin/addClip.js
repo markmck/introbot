@@ -20,6 +20,16 @@ module.exports = {
         .setDescription("Audio file to add (mp3, wav, ogg)")
         .setRequired(true)
     )
+    .addStringOption((option) =>
+      option
+        .setName("type")
+        .setDescription("Type of the audio clip (intro or outro)")
+        .setRequired(true)
+        .addChoices(
+          { name: "Intro", value: "intro" },
+          { name: "Outro", value: "outro" }
+        )
+    )
     .addNumberOption((option) =>
       option
         .setName("volume")
@@ -41,6 +51,7 @@ module.exports = {
 
     const attachment = interaction.options.getAttachment("file");
     const volume = interaction.options.getNumber("volume") || 0.8;
+    const type = interaction.options.getString("type");
     const description = interaction.options.getString("description") || "";
 
     // Validate file size (e.g., 5MB limit)
@@ -79,7 +90,7 @@ module.exports = {
       await downloadFile(attachment.url, filePath);
 
       // Add to clips database
-      const newClip = await clipsList.insertClip(fileName, volume, description);
+      const newClip = await clipsList.insertClip(fileName, volume, description, type);
 
       await interaction.editReply({
         content: `✅ Clip added successfully!\n**ID:** ${newClip.id}\n**File:** ${newClip.audioFile}\n**Volume:** ${newClip.volume}\n**Description:** ${newClip.description}`,

@@ -29,12 +29,14 @@ async function save() {
 }
 
 module.exports = {
-  getAllClips: async function () {
+  getAllClips: async function (type = null) {
     await load();
-    return Object.entries(clips).map(([id, data]) => ({
-      id: parseInt(id),
-      ...data,
-    }));
+    return Object.entries(clips)
+      .map(([id, data]) => ({
+        id: parseInt(id),
+        ...data,
+      }))
+      .filter((clip) => type === null || clip.type === type);
   },
 
   getClip: async function (id) {
@@ -43,12 +45,17 @@ module.exports = {
     return data ? { id: parseInt(id), ...data } : null;
   },
 
-  insertClip: async function (audioFile, volume = 0.8, description = "") {
+  insertClip: async function (
+    audioFile,
+    volume = 0.8,
+    description = "",
+    type = "intro"
+  ) {
     await load();
     const ids = Object.keys(clips).map((id) => parseInt(id));
     const newId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
 
-    const newClip = { audioFile, volume, description };
+    const newClip = { audioFile, type, volume, description };
     clips[newId] = newClip;
     await save();
     return { id: newId, ...newClip };
@@ -68,6 +75,16 @@ module.exports = {
     await load();
     if (clips[id]) {
       clips[id].description = description;
+      await save();
+      return 1;
+    }
+    return 0;
+  },
+
+  setClipType: async function (id, type) {
+    await load();
+    if (clips[id]) {
+      clips[id].type = type;
       await save();
       return 1;
     }
