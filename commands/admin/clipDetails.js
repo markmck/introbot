@@ -21,9 +21,6 @@ module.exports = {
     ),
   async execute(interaction) {
     const clipId = parseInt(interaction.options.getString("clip"));
-    const volume = interaction.options.getNumber("volume");
-
-    console.log(`Setting clip ${clipId} volume to ${volume}`);
 
     // Check if clip exists
     const clip = await clips.getClip(clipId);
@@ -36,6 +33,7 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
+      .setColor(0x00ff99)
       .setTitle(`Details for Clip: ${clip.audioFile}`)
       .addFields(
         { name: "ID", value: clip.id.toString(), inline: true },
@@ -43,11 +41,13 @@ module.exports = {
         { name: "Volume", value: clip.volume.toString(), inline: true },
         {
           name: "Description",
-          value: clip.description || "No description",
+          value: clip.description || `_No description_`,
           inline: false,
         }
       )
-      .setColor(0x00ff99)
+      .setFooter({
+        text: `Use /setintro to set your intro to this clip or /preview to preview it.`,
+      })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed], ephemeral: true });

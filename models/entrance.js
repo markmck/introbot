@@ -44,7 +44,7 @@ module.exports = {
 
   insert: async function (userId, audioFileId, username) {
     await load();
-    const newEntry = { audioFileId, username, volume: 1.0 };
+    const newEntry = { audioFileId, username };
     entrance[userId] = newEntry;
     await save();
     return { userId, ...newEntry };

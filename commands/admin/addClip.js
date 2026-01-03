@@ -86,9 +86,7 @@ module.exports = {
       });
 
       await interaction.channel.send({
-        content: ` **${
-          newClip.description ?? newClip.audioFile
-        }** was added!`,
+        content: ` **${clipsList.getClipTitle(newClip)}** was added!`,
         files: [{ attachment: filePath, name: newClip.audioFile }],
       });
     } catch (error) {
