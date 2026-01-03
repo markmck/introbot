@@ -47,6 +47,7 @@ module.exports = {
   },
 
   async autocomplete(interaction) {
+    interaction.options.type = "outro";
     await handleClipAutocomplete(interaction);
   },
 };

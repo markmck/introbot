@@ -62,6 +62,7 @@ module.exports = {
 
   // Autocomplete handler for clip names
   async autocomplete(interaction) {
+    interaction.options.type = "intro";
     await handleClipAutocomplete(interaction);
   },
 };
