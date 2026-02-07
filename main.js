@@ -54,5 +54,18 @@ for (const file of eventFiles) {
   console.log(`Loaded event: ${event.name}`);
 }
 
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('SIGINT received, disconnecting...');
+  client.destroy();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, disconnecting...');
+  client.destroy();
+  process.exit(0);
+});
+
 // Login to Discord
 client.login(token);

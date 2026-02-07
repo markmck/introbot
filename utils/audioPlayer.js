@@ -25,31 +25,34 @@ function safeDisconnect(guildId, reason) {
   }
 }
 
+const connectingGuilds = new Set();
+
 /**
  * Play audio in a voice channel
  */
 async function playAudio(channel, filePath, volume = 0.5) {
   const guildId = channel.guild.id;
-  safeDisconnect(guildId, "before new audio playback");
 
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: channel.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
-  });
-
-  try {
-    await entersState(connection, VoiceConnectionStatus.Ready, 5000);
-    console.log("[playAudio] Connection ready");
-  } catch (error) {
-    console.error("Failed to connect to voice channel:", error);
-    connection.destroy();
+  if (connectingGuilds.has(guildId)) {
+    console.log(`[playAudio] Already connecting in guild ${guildId}`);
     return;
   }
 
-  const player = createAudioPlayer();
+  connectingGuilds.add(guildId);
 
   try {
+    safeDisconnect(guildId, "before new audio playback");
+
+    const connection = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: channel.guild.id,
+      adapterCreator: channel.guild.voiceAdapterCreator,
+    });
+
+    await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+    console.log("[playAudio] Connection ready");
+
+    const player = createAudioPlayer();
     const resource = createAudioResource(filePath, {
       inlineVolume: true,
     });
@@ -60,8 +63,7 @@ async function playAudio(channel, filePath, volume = 0.5) {
     connection.subscribe(player);
     player.play(resource);
 
-    return new Promise((resolve) => {
-      // 30 second timeout in case audio never finishes
+    await new Promise((resolve) => {
       const timeout = setTimeout(() => {
         console.log("[playAudio] Audio playback timeout - forcing disconnect");
         safeDisconnect(guildId, "timeout");
@@ -76,11 +78,10 @@ async function playAudio(channel, filePath, volume = 0.5) {
         console.log("[playAudio] Audio finished (Idle status)");
         clearTimeout(timeout);
 
-        // Wait longer before disconnecting so you can check
         setTimeout(() => {
           safeDisconnect(guildId, "after playback");
           resolve();
-        }, 1000); // 1 second delay
+        }, 1000);
       });
 
       player.on("error", (error) => {
@@ -91,10 +92,11 @@ async function playAudio(channel, filePath, volume = 0.5) {
         resolve();
       });
     });
-  } catch (error) {
-    console.error("[playAudio] Error creating audio resource:", error);
-    connection.destroy();
-    return;
+  } catch (err) {
+    console.error('[playAudio] Voice connection failed:', err);
+    safeDisconnect(guildId, "error");
+  } finally {
+    connectingGuilds.delete(guildId);
   }
 }
 
