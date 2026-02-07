@@ -25,24 +25,23 @@ function safeDisconnect(guildId, reason) {
   }
 }
 
-const connectingGuilds = new Set();
+const activeGuilds = new Set();
 
 /**
- * Play audio in a voice channel
+ * Play audio in a voice channel.
+ * If audio is already playing in the guild, the request is silently skipped.
  */
 async function playAudio(channel, filePath, volume = 0.5) {
   const guildId = channel.guild.id;
 
-  if (connectingGuilds.has(guildId)) {
-    console.log(`[playAudio] Already connecting in guild ${guildId}`);
+  if (activeGuilds.has(guildId)) {
+    console.log(`[playAudio] Audio already active in guild ${guildId}, skipping`);
     return;
   }
 
-  connectingGuilds.add(guildId);
+  activeGuilds.add(guildId);
 
   try {
-    safeDisconnect(guildId, "before new audio playback");
-
     const connection = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
@@ -96,7 +95,7 @@ async function playAudio(channel, filePath, volume = 0.5) {
     console.error('[playAudio] Voice connection failed:', err);
     safeDisconnect(guildId, "error");
   } finally {
-    connectingGuilds.delete(guildId);
+    activeGuilds.delete(guildId);
   }
 }
 
